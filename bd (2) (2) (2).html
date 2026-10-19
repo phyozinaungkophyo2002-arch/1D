@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Football Bet Manager</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Pyidaungsu Font -->
+    <link rel="stylesheet" href="https://mmwebfonts.comme/css/pyidaungsu.css">
+    <!-- html2canvas Library for Exporting Table to PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e1;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --header-bg: #f8fafc;
+            --table-header-bg: #e2e8f0;
+            --success: #179604;
+            --danger: #f50202;
+            --warning: #f59e0b;
+            --modal-overlay: rgba(0, 0, 0, 0.5);
+            --sidebar-width: 240px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e1d36;
+            --text-color: #f1f5f9;
+            --border-color: #696b6c;
+            --primary: #ff9900;
+            --primary-hover: #4f46e5;
+            --header-bg: #1e293b;
+            --table-header-bg: #334155;
+            --modal-overlay: rgba(0, 0, 0, 0.75);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pyidaungsu', 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: bold !important;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 6px;
+            transition: all 0.3s ease;
+            font-weight: bold !important;
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Drawer Styles */
+        .sidebar-toggle-btn {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            z-index: 999;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: calc(-1 * var(--sidebar-width));
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--card-bg);
+            z-index: 1001;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 15px;
+            color: var(--primary);
+        }
+
+        .sidebar-close-btn {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            padding: 12px 14px;
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+            opacity: 0.85;
+            text-align: left;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        .main-container {
+            margin-top: 50px;
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-weight: bold;
+            opacity: 0.95;
+            font-size: 12px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            outline: none;
+            transition: border 0.2s;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+            touch-action: manipulation;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .btn:hover { opacity: 0.9; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-secondary { background: var(--warning); color: var(--text-color); }
+
+        .table-responsive {
+            overflow-x: visible;
+            margin-top: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: bold !important;
+            font-size: 12px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            position: relative;
+        }
+
+        th {
+            background: var(--table-header-bg);
+            font-weight: bold;
+        }
+
+        #winLoseTable, #winLoseTable th, #winLoseTable td {
+            font-weight: bold !important;
+        }
+
+        #winLoseUserHeaderRow td {
+            font-size: 13px !important;
+            padding: 8px !important;
+            font-weight: bold !important;
+        }
+
+        .odds-cell {
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .text-win {
+            color: var(--success) !important;
+            font-weight: bold;
+        }
+
+        .text-loss {
+            color: var(--danger) !important;
+            font-weight: bold;
+        }
+
+        .text-error {
+            color: var(--danger) !important;
+            font-weight: bold;
+            background-color: rgba(245, 2, 2, 0.1);
+        }
+
+        .table-input {
+            width: 100%;
+            text-align: center;
+            border: 1px solid transparent;
+            background: transparent;
+            font-weight: bold;
+            color: inherit;
+            padding: 4px 2px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .table-input:focus {
+            border-color: var(--primary);
+            background: var(--card-bg);
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dots-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 16px;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .dots-btn:hover {
+            background: var(--header-bg);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: var(--card-bg);
+            min-width: 100px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-content button {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .dropdown-content button:hover {
+            background-color: var(--header-bg);
+        }
+
+        .dropdown-content button.edit-btn {
+            color: var(--warning);
+        }
+
+        .dropdown-content button.delete-btn {
+            color: var(--danger);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--modal-overlay);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 420px;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .modal-header h4 {
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.6;
+            padding: 0 6px;
+        }
+
+        .close-modal:hover { opacity: 1; }
+
+        .summary-row {
+            font-weight: bold;
+            background: var(--header-bg);
+        }
+
+        /* Toast Container & Notification Styles */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-box {
+            min-width: 240px;
+            background: #10b981;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            animation: slideIn 0.3s ease, fadeOut 0.5s ease 2.5s forwards;
+            pointer-events: auto;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i> Menu
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar Drawer -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span><i class="fa-solid fa-futbol"></i> Bet Manager</span>
+            <button class="sidebar-close-btn" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" onclick="switchTab('match', this)">
+                <i class="fa-solid fa-trophy"></i> Match List
+            </button>
+            <button class="tab-btn" onclick="switchTab('pasteMatch', this)">
+                <i class="fa-solid fa-paste"></i> Paste Match
+            </button>
+            <button class="tab-btn" onclick="switchTab('entry', this)">
+                <i class="fa-solid fa-pen-to-square"></i> Bet Entry
+            </button>
+            <button class="tab-btn" onclick="switchTab('entryPaste', this)">
+                <i class="fa-solid fa-file-import"></i> Entry Paste
+            </button>
+            <button class="tab-btn" onclick="switchTab('namelist', this)">
+                <i class="fa-solid fa-users"></i> User List
+            </button>
+            <button class="tab-btn" onclick="switchTab('ledger', this)">
+                <i class="fa-solid fa-book"></i> Ledger
+            </button>
+            <button class="tab-btn" onclick="switchTab('winlose', this)">
+                <i class="fa-solid fa-chart-pie"></i> Win/Lose Report
+            </button>
+            <button class="tab-btn" onclick="switchTab('settings', this)">
+                <i class="fa-solid fa-gear"></i> Setting
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+
+        <!-- MATCH TAB -->
+        <div id="match" class="tab-content active">
+            <form id="matchForm" onsubmit="saveMatch(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Team 1</label>
+                        <input type="text" id="upperTeam" placeholder="e.g. Man Utd" oninput="updateFavoredOptions()" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Team 2</label>
+                        <input type="text" id="lowerTeam" placeholder="e.g. Arsenal" oninput="updateFavoredOptions()" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Favored Team</label>
+                        <select id="favoredTeamSelect"></select>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa-solid fa-plus"></i> Add Match
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table id="matchTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 8%;">No</th>
+                            <th style="width: 20%;">Home</th>
+                            <th style="width: 20%;">Away</th>
+                            <th style="width: 14%;">Body</th>
+                            <th style="width: 14%;">Goal</th>
+                            <th style="width: 12%;">Score</th>
+                            <th style="width: 12%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PASTE MATCH TAB -->
+        <div id="pasteMatch" class="tab-content">
+            <form onsubmit="handlePasteMatchSave(event)">
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="margin-bottom: 4px;">Paste Matches</label>
+                    <textarea id="pasteMatchInput" rows="8" placeholder="Paste Matches Here&#10;e.g. မန်ယူ 1+20 Vs ချဲစီး 3-20 (1-2)"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Matches
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ENTRY TAB -->
+        <div id="entry" class="tab-content">
+            <form id="entryForm" onsubmit="saveEntry(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Select Match</label>
+                        <select id="entryMatchSelect" onchange="updateEntryOptions()" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Bettor</label>
+                        <select id="entryUserSelect" required></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Select Type</label>
+                        <select id="entryTypeSelect" onchange="autoFillOdds()" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Odds</label>
+                        <input type="text" id="entryOdds" placeholder="e.g. 1-80" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="entryAmount" placeholder="10000" required>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa-solid fa-cart-plus"></i> Place Bet
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="form-row" style="margin-top: 12px; align-items: flex-end; justify-content: space-between;">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-filter"></i> Filter Entry Table By User</label>
+                    <select id="entryTableUserFilter" onchange="onUserFilterChange()">
+                        <option value="ALL">-- All Users --</option>
+                    </select>
+                </div>
+                <button class="btn btn-danger" onclick="clearFilteredEntries()">
+                    <i class="fa-solid fa-trash-can"></i> Clear All Entries
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="entryTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">No</th>
+                            <th style="width: 25%;">Bettor</th>
+                            <th style="width: 25%;">Selection</th>
+                            <th style="width: 15%;">Odds</th>
+                            <th style="width: 15%;">Amount</th>
+                            <th style="width: 10%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ENTRY PASTE TAB WITH LIVE PREVIEW -->
+        <div id="entryPaste" class="tab-content">
+            <!-- Datalist for Team Name Suggestions -->
+            <datalist id="teamSuggestions"></datalist>
+
+            <form onsubmit="handleEntryPasteSave(event)">
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label>Select Bettor</label>
+                    <select id="entryPasteUserSelect" required></select>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label>Paste Bet List</label>
+                    <textarea id="entryPasteInput" rows="6" placeholder="မန်ယူ 1သိန်း&#10;Ga 10000" oninput="livePreviewPasteEntries()" required></textarea>
+                </div>
+
+                <!-- LIVE PREVIEW TABLE -->
+                <div id="pastePreviewContainer" style="margin-bottom: 12px; display: none;">
+                    <label style="color: var(--primary); margin-bottom: 4px; display: block;">
+                        <i class="fa-solid fa-eye"></i> Live Validation Preview (မသိသော/မတူသောအသင်းများကို အနီရောင်ပြပေးပါမည်)
+                    </label>
+                    <div class="table-responsive">
+                        <table id="pastePreviewTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">No</th>
+                                    <th style="width: 40%;">Selection</th>
+                                    <th style="width: 25%;">Odds</th>
+                                    <th style="width: 25%;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Entry Paste
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- NAME LIST TAB -->
+        <div id="namelist" class="tab-content">
+            <form id="nameForm" onsubmit="saveName(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>User Name</label>
+                        <input type="text" id="userName" placeholder="e.g. John" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Win Comm (%)</label>
+                        <input type="number" step="0.1" id="winPercent" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Lose Comm (%)</label>
+                        <input type="number" step="0.1" id="losePercent" value="0" required>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa-solid fa-user-plus"></i> Save User
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table id="nameTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">No</th>
+                            <th style="width: 35%;">Name</th>
+                            <th style="width: 20%;">Win Comm</th>
+                            <th style="width: 20%;">Lose Comm</th>
+                            <th style="width: 15%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- LEDGER TAB -->
+        <div id="ledger" class="tab-content">
+            <div id="ledgerContainer"></div>
+        </div>
+
+        <!-- WIN/LOSE TAB -->
+        <div id="winlose" class="tab-content">
+            <div class="form-row" style="align-items: flex-end; justify-content: space-between; margin-bottom: 8px;">
+                <div class="form-group">
+                    <label>Filter Bettor</label>
+                    <select id="winLoseUserFilter" onchange="renderWinLoseTable()">
+                        <option value="ALL">All Bettors</option>
+                    </select>
+                </div>
+                <!-- PNG Save Button -->
+                <button class="btn btn-primary" onclick="exportWinLoseToPNG()">
+                    <i class="fa-solid fa-image"></i> Export PNG
+                </button>
+            </div>
+
+            <div class="table-responsive" style="padding: 6px; background: var(--card-bg);" id="winLoseExportArea">
+                <table id="winLoseTable">
+                    <thead>
+                        <tr id="winLoseUserHeaderRow" style="background: var(--header-bg); font-weight: bold; font-style: italic;">
+                            <td colspan="6" id="winLoseUserHeaderCell" style="text-align: center; padding: 8px;">
+                                ALL Commission 0%
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="width: 6%;">No</th>
+                            <th style="width: 38%;">Type</th>
+                            <th style="width: 20%;">Amount</th>
+                            <th style="width: 8%;">%</th>
+                            <th style="width: 14%;">Win</th>
+                            <th style="width: 14%;">Lose</th>
+                        </tr>
+                    </thead>
+                    <tbody id="winLoseTbody"></tbody>
+                    <tfoot id="winLoseTfoot"></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settings" class="tab-content">
+            <h4 style="margin-bottom: 12px; color: var(--primary); font-size: 14px;"><i class="fa-solid fa-gear"></i> Settings</h4>
+            <div style="display: flex; flex-direction: column; gap: 10px; max-width: 280px;">
+                <button class="btn btn-secondary" style="width: 100%; justify-content: flex-start; padding: 10px 14px;" onclick="toggleTheme()">
+                    <i class="fa-solid fa-moon"></i> Toggle Theme
+                </button>
+                <button class="btn btn-danger" style="width: 100%; justify-content: flex-start; padding: 10px 14px;" onclick="restartData()">
+                    <i class="fa-solid fa-rotate"></i> Reset Matches & Bets
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- EDIT POPUP MODAL -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="modalTitle"><i class="fa-solid fa-pen-to-square"></i> Edit Entry</h4>
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "FB_BETTING_APP_DATA_V5";
+
+        let db = { matches: [], users: [], entries: [], theme: 'light' };
+
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast-box';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function loadData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (data) db = JSON.parse(data);
+            if(!db.theme) db.theme = 'light';
+            document.documentElement.setAttribute('data-theme', db.theme);
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        }
+
+        function toggleTheme() {
+            db.theme = db.theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', db.theme);
+            saveData();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.sidebar-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if(btn) btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if(tabId === 'entry') updateEntryDropdowns(true);
+            if(tabId === 'entryPaste') {
+                updateEntryPasteDropdown();
+                updateTeamDatalist();
+            }
+            if(tabId === 'ledger') renderLedger();
+            if(tabId === 'winlose') {
+                updateWinLoseDropdown();
+                renderWinLoseTable();
+            }
+
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if(sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        function openModal(title, bodyHtml) {
+            document.getElementById('modalTitle').innerHTML = title;
+            document.getElementById('modalBody').innerHTML = bodyHtml;
+            document.getElementById('editModal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('open');
+        }
+
+        function toggleDropdown(event, id) {
+            event.stopPropagation();
+            document.querySelectorAll('.dropdown-content').forEach(d => {
+                if (d.id !== id) d.classList.remove('show');
+            });
+            const target = document.getElementById(id);
+            if (target) target.classList.toggle('show');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.dots-btn') && !event.target.matches('.dots-btn *')) {
+                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            }
+        };
+
+        function getMatchTeams(m) {
+            const home = m.favored || m.upper;
+            const away = (home === m.upper) ? m.lower : m.upper;
+            return { home, away };
+        }
+
+        function getMatchDisplayText(m) {
+            if (!m) return '';
+            const { home, away } = getMatchTeams(m);
+            return `${home} Vs ${away}`;
+        }
+
+        function getTypeOptionsHtml(m, selectedType = '') {
+            if (!m) return '';
+            const { home, away } = getMatchTeams(m);
+            const options = [
+                `${home}`,
+                `${away}`,
+                `${home} ⬆`,
+                `${away} ⬆`,
+                `${home} ⬇`,
+                `${away} ⬇`
+            ];
+
+            return options.map(opt => `<option value="${opt}" ${opt === selectedType ? 'selected' : ''}>${opt}</option>`).join('');
+        }
+
+        function getYesterdayDateFormatted() {
+            const date = new Date();
+            date.setDate(date.getDate() - 1);
+
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+
+            const daysMap = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+            const dayName = daysMap[date.getDay()];
+
+            return `${day}-${month}-${year} [ ${dayName} ]`;
+        }
+
+        // ================= MATCH LOGIC =================
+        function updateFavoredOptions() {
+            const upper = document.getElementById('upperTeam').value.trim() || 'Team 1';
+            const lower = document.getElementById('lowerTeam').value.trim() || 'Team 2';
+            const select = document.getElementById('favoredTeamSelect');
+            select.innerHTML = `
+                <option value="${upper}">${upper}</option>
+                <option value="${lower}">${lower}</option>
+            `;
+        }
+
+        function saveMatch(e) {
+            e.preventDefault();
+            const upper = document.getElementById('upperTeam').value.trim();
+            const lower = document.getElementById('lowerTeam').value.trim();
+            const favored = document.getElementById('favoredTeamSelect').value;
+
+            // Check if match already exists (Overwrite logic)
+            const existingMatch = db.matches.find(m => 
+                (m.upper === upper && m.lower === lower) || 
+                (m.upper === lower && m.lower === upper)
+            );
+
+            if (existingMatch) {
+                existingMatch.upper = upper;
+                existingMatch.lower = lower;
+                existingMatch.favored = favored;
+            } else {
+                db.matches.push({
+                    id: Date.now(),
+                    upper, lower, favored,
+                    bodyOdds: "0-0",
+                    goalOdds: "0-0",
+                    score: "0-0"
+                });
+            }
+
+            document.getElementById('matchForm').reset();
+            updateFavoredOptions();
+            saveData();
+            renderMatches();
+            updateTeamDatalist();
+        }
+
+        // ================= PASTE MATCH LOGIC =================
+        function parseSingleMatchLine(line) {
+            line = line.trim();
+            if (!line) return null;
+
+            // ဂိုးရလဒ် စစ်ဆေးခြင်း (ဥပမာ - (1-2) သို့မဟုတ် (3:2))
+            let score = null;
+            const scoreMatch = line.match(/[\(\[\{]\s*(\d+[\-\:]\d+)\s*[\)\]\}]/);
+            if (scoreMatch) {
+                score = scoreMatch[1].replace(':', '-');
+                line = line.replace(scoreMatch[0], '').trim();
+            }
+
+            const vsParts = line.split(/\s+[vV][sS]\s+/);
+            if (vsParts.length < 2) return null;
+
+            const leftPart = vsParts[0].trim();
+            const rightPart = vsParts[1].trim();
+
+            const oddsRegex = /([\d\+\-\=]+)\s*$/;
+
+            let upperTeam = leftPart;
+            let bodyOdds = "0-0";
+            const leftMatch = leftPart.match(oddsRegex);
+            if (leftMatch) {
+                bodyOdds = leftMatch[1];
+                upperTeam = leftPart.substring(0, leftMatch.index).trim();
+            }
+
+            let lowerTeam = rightPart;
+            let goalOdds = "0-0";
+            const rightMatch = rightPart.match(oddsRegex);
+            if (rightMatch) {
+                goalOdds = rightMatch[1];
+                lowerTeam = rightPart.substring(0, rightMatch.index).trim();
+            }
+
+            if (!upperTeam || !lowerTeam) return null;
+
+            return {
+                upper: upperTeam,
+                lower: lowerTeam,
+                favored: upperTeam,
+                bodyOdds: bodyOdds,
+                goalOdds: goalOdds,
+                score: score
+            };
+        }
+
+        function handlePasteMatchSave(e) {
+            e.preventDefault();
+            const text = document.getElementById('pasteMatchInput').value;
+            const lines = text.split('\n');
+            let addedCount = 0;
+
+            lines.forEach(line => {
+                const parsed = parseSingleMatchLine(line);
+                if (parsed) {
+                    // Check if match already exists (Overwrite logic)
+                    const existingIndex = db.matches.findIndex(m => 
+                        (m.upper === parsed.upper && m.lower === parsed.lower) || 
+                        (m.upper === parsed.lower && m.lower === parsed.upper)
+                    );
+
+                    if (existingIndex !== -1) {
+                        const existing = db.matches[existingIndex];
+                        existing.upper = parsed.upper;
+                        existing.lower = parsed.lower;
+                        existing.favored = parsed.favored;
+                        existing.bodyOdds = parsed.bodyOdds;
+                        existing.goalOdds = parsed.goalOdds;
+                        if (parsed.score !== null) {
+                            existing.score = parsed.score;
+                        }
+                    } else {
+                        db.matches.push({
+                            id: Date.now() + Math.floor(Math.random() * 1000),
+                            upper: parsed.upper,
+                            lower: parsed.lower,
+                            favored: parsed.favored,
+                            bodyOdds: parsed.bodyOdds,
+                            goalOdds: parsed.goalOdds,
+                            score: parsed.score !== null ? parsed.score : "0-0"
+                        });
+                    }
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                saveData();
+                renderMatches();
+                updateTeamDatalist();
+                renderWinLoseTable();
+                document.getElementById('pasteMatchInput').value = '';
+                
+                const matchListBtn = document.querySelectorAll('.sidebar-tabs .tab-btn')[0];
+                switchTab('match', matchListBtn);
+            } else {
+                alert("ကျေးဇူးပြု၍ ပွဲစဉ်ပုံစံကို မှန်ကန်စွာ ကူးထည့်ပေးပါ။\nဥပမာ - မန်ယူ 1+20 Vs ချဲစီး 3-20 (1-2)");
+            }
+        }
+
+        function updateMatchDetail(id, field, value) {
+            const match = db.matches.find(m => m.id == id);
+            if(match) {
+                if(field === 'score') {
+                    value = value.replace(':', '-');
+                }
+                match[field] = value;
+                saveData();
+                renderWinLoseTable();
+            }
+        }
+
+        function openEditMatchModal(id) {
+            const match = db.matches.find(m => m.id == id);
+            if(!match) return;
+
+            const html = `
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>Team 1</label>
+                    <input type="text" id="modalUpper" value="${match.upper}">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>Team 2</label>
+                    <input type="text" id="modalLower" value="${match.lower}">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>Favored Team (အပေါ်သင်း)</label>
+                    <select id="modalFavored">
+                        <option value="${match.upper}" ${match.favored === match.upper ? 'selected' : ''}>${match.upper}</option>
+                        <option value="${match.lower}" ${match.favored === match.lower ? 'selected' : ''}>${match.lower}</option>
+                    </select>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitEditMatch(${match.id})">Save Changes</button>
+                </div>
+            `;
+            openModal('<i class="fa-solid fa-pen-to-square"></i> Edit Match', html);
+        }
+
+        function submitEditMatch(id) {
+            const match = db.matches.find(m => m.id == id);
+            if(match) {
+                match.upper = document.getElementById('modalUpper').value.trim();
+                match.lower = document.getElementById('modalLower').value.trim();
+                match.favored = document.getElementById('modalFavored').value;
+                saveData();
+                renderMatches();
+                updateTeamDatalist();
+                renderWinLoseTable();
+                closeModal();
+            }
+        }
+
+        function deleteMatch(id) {
+            if(confirm("Are you sure to delete this match?")) {
+                db.matches = db.matches.filter(m => m.id != id);
+                db.entries = db.entries.filter(e => e.matchId != id);
+                saveData();
+                renderMatches();
+                updateTeamDatalist();
+                renderWinLoseTable();
+            }
+        }
+
+        function renderMatches() {
+            const tbody = document.querySelector('#matchTable tbody');
+            tbody.innerHTML = '';
+            db.matches.forEach((m, index) => {
+                const { home, away } = getMatchTeams(m);
+                const displayScore = (m.score || "0-0").replace(':', '-');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong style="color:var(--primary);">${home}</strong></td>
+                        <td><strong style="color:var(--primary);">${away}</strong></td>
+                        <td class="odds-cell"><input class="table-input" type="text" value="${m.bodyOdds}" onchange="updateMatchDetail(${m.id}, 'bodyOdds', this.value)"></td>
+                        <td class="odds-cell"><input class="table-input" type="text" value="${m.goalOdds}" onchange="updateMatchDetail(${m.id}, 'goalOdds', this.value)"></td>
+                        <td><input class="table-input" type="text" value="${displayScore}" onchange="updateMatchDetail(${m.id}, 'score', this.value)"></td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="dots-btn" onclick="toggleDropdown(event, 'match-drop-${m.id}')"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <div id="match-drop-${m.id}" class="dropdown-content">
+                                    <button class="edit-btn" onclick="openEditMatchModal(${m.id})"><i class="fa-solid fa-pen"></i> Edit</button>
+                                    <button class="delete-btn" onclick="deleteMatch(${m.id})"><i class="fa-solid fa-trash"></i> Delete</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= USER LOGIC =================
+        function saveName(e) {
+            e.preventDefault();
+            const name = document.getElementById('userName').value.trim();
+            const winP = parseFloat(document.getElementById('winPercent').value) || 0;
+            const loseP = parseFloat(document.getElementById('losePercent').value) || 0;
+
+            db.users.push({ id: Date.now(), name, winP, loseP });
+
+            document.getElementById('nameForm').reset();
+            saveData();
+            renderNames();
+            updateEntryDropdowns();
+            updateEntryPasteDropdown();
+            updateWinLoseDropdown();
+        }
+
+        function openEditNameModal(id) {
+            const u = db.users.find(user => user.id == id);
+            if(!u) return;
+
+            const html = `
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>User Name</label>
+                    <input type="text" id="modalUserName" value="${u.name}">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>Win Comm (%)</label>
+                    <input type="number" step="0.1" id="modalWinP" value="${u.winP}">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>Lose Comm (%)</label>
+                    <input type="number" step="0.1" id="modalLoseP" value="${u.loseP}">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitEditName(${u.id})">Save Changes</button>
+                </div>
+            `;
+            openModal('<i class="fa-solid fa-user-pen"></i> Edit User', html);
+        }
+
+        function submitEditName(id) {
+            const u = db.users.find(user => user.id == id);
+            if(u) {
+                u.name = document.getElementById('modalUserName').value.trim();
+                u.winP = parseFloat(document.getElementById('modalWinP').value) || 0;
+                u.loseP = parseFloat(document.getElementById('modalLoseP').value) || 0;
+                saveData();
+                renderNames();
+                updateEntryDropdowns();
+                updateEntryPasteDropdown();
+                updateWinLoseDropdown();
+                renderWinLoseTable();
+                closeModal();
+            }
+        }
+
+        function deleteName(id) {
+            if(confirm("Are you sure to delete this user?")) {
+                db.users = db.users.filter(u => u.id != id);
+                saveData();
+                renderNames();
+                updateEntryDropdowns();
+                updateEntryPasteDropdown();
+                updateWinLoseDropdown();
+                renderWinLoseTable();
+            }
+        }
+
+        function renderNames() {
+            const tbody = document.querySelector('#nameTable tbody');
+            tbody.innerHTML = '';
+            db.users.forEach((u, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${u.name}</td>
+                        <td>${u.winP} %</td>
+                        <td>${u.loseP} %</td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="dots-btn" onclick="toggleDropdown(event, 'user-drop-${u.id}')"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <div id="user-drop-${u.id}" class="dropdown-content">
+                                    <button class="edit-btn" onclick="openEditNameModal(${u.id})"><i class="fa-solid fa-pen"></i> Edit</button>
+                                    <button class="delete-btn" onclick="deleteName(${u.id})"><i class="fa-solid fa-trash"></i> Delete</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= ENTRY LOGIC =================
+        function updateEntryDropdowns(resetSelection = false) {
+            const matchSel = document.getElementById('entryMatchSelect');
+            const userSel = document.getElementById('entryUserSelect');
+            const filterUserSel = document.getElementById('entryTableUserFilter');
+
+            const currentMatch = matchSel.value;
+            const currentUser = userSel.value;
+
+            matchSel.innerHTML = '<option value="">-- Select Match --</option>';
+            db.matches.forEach(m => {
+                matchSel.innerHTML += `<option value="${m.id}">${getMatchDisplayText(m)}</option>`;
+            });
+
+            userSel.innerHTML = '<option value="">-- Select User --</option>';
+            db.users.forEach(u => userSel.innerHTML += `<option value="${u.id}">${u.name}</option>`);
+
+            const currentFilter = filterUserSel.value || 'ALL';
+            filterUserSel.innerHTML = '<option value="ALL">-- All Users --</option>';
+            db.users.forEach(u => filterUserSel.innerHTML += `<option value="${u.id}">${u.name}</option>`);
+            filterUserSel.value = currentFilter;
+
+            if(!resetSelection) {
+                matchSel.value = currentMatch;
+                userSel.value = currentUser;
+            }
+
+            updateEntryOptions();
+            renderEntries();
+        }
+
+        function updateEntryOptions() {
+            const matchId = document.getElementById('entryMatchSelect').value;
+            const typeSel = document.getElementById('entryTypeSelect');
+            const currentType = typeSel.value;
+            typeSel.innerHTML = '';
+
+            if(!matchId) return;
+
+            const m = db.matches.find(item => item.id == matchId);
+            if(m) {
+                typeSel.innerHTML = getTypeOptionsHtml(m, currentType);
+            }
+            autoFillOdds();
+        }
+
+        function autoFillOdds() {
+            const matchId = document.getElementById('entryMatchSelect').value;
+            const typeVal = document.getElementById('entryTypeSelect').value;
+            const oddsInput = document.getElementById('entryOdds');
+
+            if(!matchId || !typeVal) return;
+
+            const m = db.matches.find(item => item.id == matchId);
+            if(m) {
+                if(typeVal.includes('⬆') || typeVal.includes('⬇') || typeVal.includes('Goal-Over') || typeVal.includes('Goal-Under') || typeVal.includes('(G+)') || typeVal.includes('(G-)')) {
+                    oddsInput.value = m.goalOdds;
+                } else {
+                    oddsInput.value = m.bodyOdds;
+                }
+            }
+        }
+
+        function saveEntry(e) {
+            e.preventDefault();
+            const matchId = document.getElementById('entryMatchSelect').value;
+            const userId = document.getElementById('entryUserSelect').value;
+            const typeSelect = document.getElementById('entryTypeSelect').value;
+            const odds = document.getElementById('entryOdds').value.trim();
+            const amount = parseFloat(document.getElementById('entryAmount').value) || 0;
+
+            const m = db.matches.find(item => item.id == matchId);
+            const { home, away } = m ? getMatchTeams(m) : { home: '', away: '' };
+
+            db.entries.push({ 
+                id: Date.now(), 
+                matchId, 
+                userId, 
+                typeSelect, 
+                odds, 
+                amount,
+                homeAtEntry: home,
+                awayAtEntry: away,
+                favoredAtEntry: m ? m.favored : '',
+                isError: false
+            });
+
+            document.getElementById('entryAmount').value = '';
+            
+            saveData();
+            renderEntries();
+            renderWinLoseTable();
+            showToast("Bet saved successfully!");
+        }
+
+        function clearFilteredEntries() {
+            const selectedUserId = document.getElementById('entryTableUserFilter').value;
+            
+            if (selectedUserId === 'ALL') {
+                if (confirm("ကျေးဇူးပြု၍ အတည်ပြုပါ: ဒေတာထဲမှ Entry အားလုံးကို ဖျက်ပစ်ပါမည်။")) {
+                    db.entries = [];
+                    saveData();
+                    renderEntries();
+                    renderWinLoseTable();
+                }
+            } else {
+                const u = db.users.find(user => user.id == selectedUserId);
+                const userName = u ? u.name : '';
+                if (confirm(`ကျေးဇူးပြု၍ အတည်ပြုပါ: Bettor '${userName}' ၏ Entry များအားလုံးကို ဖျက်ပစ်ပါမည်။`)) {
+                    db.entries = db.entries.filter(e => e.userId != selectedUserId);
+                    saveData();
+                    renderEntries();
+                    renderWinLoseTable();
+                }
+            }
+        }
+
+        // ================= ENTRY PASTE LOGIC =================
+        function updateEntryPasteDropdown() {
+            const userSel = document.getElementById('entryPasteUserSelect');
+            if(!userSel) return;
+            const current = userSel.value;
+            userSel.innerHTML = '<option value="">-- Select Bettor --</option>';
+            db.users.forEach(u => {
+                userSel.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+            });
+            userSel.value = current;
+        }
+
+        // Database ထဲရှိ အသင်းအမည်များကို Auto-complete Dropdown အတွက် Datalist ထဲ ထည့်ပေးခြင်း
+        function updateTeamDatalist() {
+            const datalist = document.getElementById('teamSuggestions');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            
+            let teamNames = new Set();
+            db.matches.forEach(m => {
+                const { home, away } = getMatchTeams(m);
+                if (home) teamNames.add(home);
+                if (away) teamNames.add(away);
+            });
+
+            teamNames.forEach(name => {
+                datalist.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+        }
+
+        function parseBurmeseAmount(str) {
+            if (!str) return { amount: 0, textWithoutAmt: str };
+            
+            let s = str.trim();
+            const mmDigits = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
+            for(let i = 0; i < 10; i++){
+                s = s.replace(new RegExp(mmDigits[i], 'g'), i);
+            }
+
+            const mmAmtPattern = /([\d\.]+)\s*(သိန်း|သောင်း|ထောင်|ရာ)?\s*$/i;
+            const match = s.match(mmAmtPattern);
+
+            if (match) {
+                let num = parseFloat(match[1]) || 0;
+                const unit = match[2];
+
+                if (unit === 'သိန်း') num *= 100000;
+                else if (unit === 'သောင်း') num *= 10000;
+                else if (unit === 'ထောင်') num *= 1000;
+                else if (unit === 'ရာ') num *= 100;
+
+                const textWithoutAmt = s.substring(0, match.index).trim();
+                return { amount: num, textWithoutAmt: textWithoutAmt };
+            }
+
+            const wordUnits = [
+                { pattern: /(တစ်|၁)?\s*သိန်း\s*$/, val: 100000 },
+                { pattern: /(နှစ်|၂)\s*သိန်း\s*$/, val: 200000 },
+                { pattern: /(သုံး|၃)\s*သိန်း\s*$/, val: 300000 },
+                { pattern: /(လေး|၄)\s*သိန်း\s*$/, val: 400000 },
+                { pattern: /(ငါး|၅)\s*သိန်း\s*$/, val: 500000 },
+                { pattern: /(တစ်|၁)?\s*သောင်း\s*$/, val: 10000 },
+                { pattern: /(နှစ်|၂)\s*သောင်း\s*$/, val: 20000 },
+                { pattern: /(သုံး|၃)\s*သောင်း\s*$/, val: 30000 },
+                { pattern: /(လေး|၄)\s*သောင်း\s*$/, val: 40000 },
+                { pattern: /(ငါး|၅)\s*သောင်း\s*$/, val: 5000 },
+                { pattern: /(တစ်|၁)?\s*ထောင်\s*$/, val: 1000 },
+                { pattern: /(နှစ်|၂)\s*ထောင်\s*$/, val: 2000 },
+                { pattern: /(သုံး|၃)\s*ထောင်\s*$/, val: 3000 },
+                { pattern: /(လေး|၄)\s*ထောင်\s*$/, val: 4000 },
+                { pattern: /(ငါး|၅)\s*ထောင်\s*$/, val: 5000 }
+            ];
+
+            for (let w of wordUnits) {
+                const wMatch = s.match(w.pattern);
+                if (wMatch) {
+                    const textWithoutAmt = s.substring(0, wMatch.index).trim();
+                    return { amount: w.val, textWithoutAmt: textWithoutAmt };
+                }
+            }
+
+            return { amount: 0, textWithoutAmt: s };
+        }
+
+        // Live Preview Function
+        function livePreviewPasteEntries() {
+            const text = document.getElementById('entryPasteInput').value;
+            const previewContainer = document.getElementById('pastePreviewContainer');
+            const tbody = document.querySelector('#pastePreviewTable tbody');
+
+            if (!text.trim()) {
+                previewContainer.style.display = 'none';
+                tbody.innerHTML = '';
+                return;
+            }
+
+            previewContainer.style.display = 'block';
+            tbody.innerHTML = '';
+
+            const lines = text.split('\n');
+            const overRegex = /(?:g\+|gp|ဂိုးပေါ်|over)/i;
+            const underRegex = /(?:g\-|ga|ဂိုးအောက်|under)/i;
+
+            let lastMatch = null;
+            let lastTeamName = "";
+            let lastIsError = false;
+
+            lines.forEach((line, idx) => {
+                line = line.trim();
+                if (!line) return;
+
+                const { amount, textWithoutAmt } = parseBurmeseAmount(line);
+
+                let foundMatch = null;
+                let matchedType = "";
+                let matchedOdds = "0-0";
+                let isError = false;
+
+                // Gp/Ga ရှေ့မှာ စာသားပါလား စစ်ဆေးမည်
+                const hasGoalKeyword = overRegex.test(textWithoutAmt) || underRegex.test(textWithoutAmt);
+                let extractedPrefixTeam = "";
+                if (hasGoalKeyword) {
+                    extractedPrefixTeam = textWithoutAmt.replace(/(?:g\+|gp|ဂိုးပေါ်|over|g\-|ga|ဂိုးအောက်|under)/gi, '').trim();
+                }
+
+                for (let m of db.matches) {
+                    const { home, away } = getMatchTeams(m);
+
+                    if (textWithoutAmt.includes(home)) {
+                        foundMatch = m;
+                        lastMatch = m;
+                        lastTeamName = home;
+                        lastIsError = false;
+                        if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                            matchedType = `${home} ⬆`;
+                            matchedOdds = m.goalOdds;
+                        } else if (underRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬇")) {
+                            matchedType = `${home} ⬇`;
+                            matchedOdds = m.goalOdds;
+                        } else {
+                            matchedType = home;
+                            matchedOdds = m.bodyOdds;
+                        }
+                        break;
+                    } else if (textWithoutAmt.includes(away)) {
+                        foundMatch = m;
+                        lastMatch = m;
+                        lastTeamName = away;
+                        lastIsError = false;
+                        if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                            matchedType = `${away} ⬆`;
+                            matchedOdds = m.goalOdds;
+                        } else if (underRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬇")) {
+                            matchedType = `${away} ⬇`;
+                            matchedOdds = m.goalOdds;
+                        } else {
+                            matchedType = away;
+                            matchedOdds = m.bodyOdds;
+                        }
+                        break;
+                    }
+                }
+
+                // Gp/Ga ရှေ့မှာ စာသားပါသော်လည်း Database ထဲမရှိပါက အဆိုပါစာသားကို အသင်းအဖြစ် ယူမည်
+                if (!foundMatch && extractedPrefixTeam) {
+                    let teamInDb = db.matches.some(m => {
+                        const { home, away } = getMatchTeams(m);
+                        return home === extractedPrefixTeam || away === extractedPrefixTeam;
+                    });
+
+                    lastTeamName = extractedPrefixTeam;
+                    isError = !teamInDb;
+                    lastIsError = isError;
+                    
+                    if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                        matchedType = `${extractedPrefixTeam} ⬆`;
+                    } else {
+                        matchedType = `${extractedPrefixTeam} ⬇`;
+                    }
+                    matchedOdds = "-";
+                }
+                // အသင်းနာမည် လုံးဝမပါဘဲ "Gp 5000" / "Ga 5000" သီးသန့် ရိုက်ထားပါက
+                else if (!foundMatch && lastTeamName && (hasGoalKeyword || textWithoutAmt.includes("⬆") || textWithoutAmt.includes("⬇") || textWithoutAmt === "")) {
+                    foundMatch = lastMatch; // အပေါ်က ပွဲစဉ်ရှိရင် ယူမည်
+                    isError = lastIsError;
+                    
+                    if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                        matchedType = `${lastTeamName} ⬆`;
+                        matchedOdds = foundMatch ? foundMatch.goalOdds : "-";
+                    } else {
+                        matchedType = `${lastTeamName} ⬇`;
+                        matchedOdds = foundMatch ? foundMatch.goalOdds : "-";
+                    }
+                } else if (!foundMatch && !extractedPrefixTeam) {
+                    isError = true;
+                    lastIsError = true;
+                    lastMatch = null;
+                    lastTeamName = textWithoutAmt;
+                    matchedType = textWithoutAmt;
+                    matchedOdds = "-";
+                }
+
+                const inputClass = isError ? "table-input text-error" : "table-input";
+
+                const displayHtml = `<input class="${inputClass}" list="teamSuggestions" type="text" value="${matchedType}" onchange="updatePreviewLine(${idx}, this.value)">`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${displayHtml}</td>
+                        <td>${matchedOdds}</td>
+                        <td>${amount.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updatePreviewLine(lineIdx, newTeamName) {
+            const textarea = document.getElementById('entryPasteInput');
+            const lines = textarea.value.split('\n');
+            let currentLineIdx = 0;
+
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    if (currentLineIdx === lineIdx) {
+                        const { amount } = parseBurmeseAmount(lines[i]);
+                        lines[i] = `${newTeamName} ${amount}`;
+                        break;
+                    }
+                    currentLineIdx++;
+                }
+            }
+
+            textarea.value = lines.join('\n');
+            livePreviewPasteEntries();
+        }
+
+        function handleEntryPasteSave(e) {
+            e.preventDefault();
+            const userId = document.getElementById('entryPasteUserSelect').value;
+            const text = document.getElementById('entryPasteInput').value;
+
+            if (!userId) {
+                alert("ကျေးဇူးပြု၍ Bettor ရွေးချယ်ပေးပါ။");
+                return;
+            }
+
+            const lines = text.split('\n');
+            let addedCount = 0;
+
+            const overRegex = /(?:g\+|gp|ဂိုးပေါ်|over)/i;
+            const underRegex = /(?:g\-|ga|ဂိုးအောက်|under)/i;
+
+            let lastMatch = null;
+            let lastTeamName = "";
+            let lastIsError = false;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                const { amount, textWithoutAmt } = parseBurmeseAmount(line);
+
+                let foundMatch = null;
+                let matchedType = "";
+                let matchedOdds = "0-0";
+                let isError = false;
+
+                // Gp/Ga ရှေ့မှာ စာသားပါလား စစ်ဆေးမည်
+                const hasGoalKeyword = overRegex.test(textWithoutAmt) || underRegex.test(textWithoutAmt);
+                let extractedPrefixTeam = "";
+                if (hasGoalKeyword) {
+                    extractedPrefixTeam = textWithoutAmt.replace(/(?:g\+|gp|ဂိုးပေါ်|over|g\-|ga|ဂိုးအောက်|under)/gi, '').trim();
+                }
+
+                for (let m of db.matches) {
+                    const { home, away } = getMatchTeams(m);
+
+                    if (textWithoutAmt.includes(home)) {
+                        foundMatch = m;
+                        lastMatch = m;
+                        lastTeamName = home;
+                        lastIsError = false;
+                        if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                            matchedType = `${home} ⬆`;
+                            matchedOdds = m.goalOdds;
+                        } else if (underRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬇")) {
+                            matchedType = `${home} ⬇`;
+                            matchedOdds = m.goalOdds;
+                        } else {
+                            matchedType = home;
+                            matchedOdds = m.bodyOdds;
+                        }
+                        break;
+                    } else if (textWithoutAmt.includes(away)) {
+                        foundMatch = m;
+                        lastMatch = m;
+                        lastTeamName = away;
+                        lastIsError = false;
+                        if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                            matchedType = `${away} ⬆`;
+                            matchedOdds = m.goalOdds;
+                        } else if (underRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬇")) {
+                            matchedType = `${away} ⬇`;
+                            matchedOdds = m.goalOdds;
+                        } else {
+                            matchedType = away;
+                            matchedOdds = m.bodyOdds;
+                        }
+                        break;
+                    }
+                }
+
+                // Gp/Ga ရှေ့မှာ စာသားပါသော်လည်း Database ထဲမရှိပါက အဆိုပါစာသားကို အသင်းအဖြစ် ယူမည်
+                if (!foundMatch && extractedPrefixTeam) {
+                    let teamInDb = db.matches.some(m => {
+                        const { home, away } = getMatchTeams(m);
+                        return home === extractedPrefixTeam || away === extractedPrefixTeam;
+                    });
+
+                    lastTeamName = extractedPrefixTeam;
+                    isError = !teamInDb;
+                    lastIsError = isError;
+                    
+                    if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                        matchedType = `${extractedPrefixTeam} ⬆`;
+                    } else {
+                        matchedType = `${extractedPrefixTeam} ⬇`;
+                    }
+                    matchedOdds = "-";
+                }
+                // အသင်းနာမည် လုံးဝမပါဘဲ "Gp 5000" / "Ga 5000" သီးသန့် ရိုက်ထားပါက
+                else if (!foundMatch && lastTeamName && (hasGoalKeyword || textWithoutAmt.includes("⬆") || textWithoutAmt.includes("⬇") || textWithoutAmt === "")) {
+                    foundMatch = lastMatch;
+                    isError = lastIsError;
+                    
+                    if (overRegex.test(textWithoutAmt) || textWithoutAmt.includes("⬆")) {
+                        matchedType = `${lastTeamName} ⬆`;
+                        matchedOdds = foundMatch ? foundMatch.goalOdds : "-";
+                    } else {
+                        matchedType = `${lastTeamName} ⬇`;
+                        matchedOdds = foundMatch ? foundMatch.goalOdds : "-";
+                    }
+                } else if (!foundMatch && !extractedPrefixTeam) {
+                    isError = true;
+                    lastIsError = true;
+                    lastMatch = null;
+                    lastTeamName = textWithoutAmt;
+                    matchedType = textWithoutAmt;
+                    matchedOdds = "-";
+                }
+
+                const { home, away } = foundMatch ? getMatchTeams(foundMatch) : { home: '', away: '' };
+
+                db.entries.push({
+                    id: Date.now() + Math.floor(Math.random() * 1000),
+                    matchId: foundMatch ? foundMatch.id : null,
+                    userId: userId,
+                    typeSelect: matchedType,
+                    odds: matchedOdds,
+                    amount: amount,
+                    homeAtEntry: home,
+                    awayAtEntry: away,
+                    favoredAtEntry: foundMatch ? foundMatch.favored : '',
+                    isError: isError
+                });
+
+                addedCount++;
+            });
+
+            if (addedCount > 0) {
+                saveData();
+                document.getElementById('entryPasteInput').value = '';
+                document.getElementById('pastePreviewContainer').style.display = 'none';
+                renderEntries();
+                renderWinLoseTable();
+                showToast("Paste entries saved successfully!");
+            }
+        }
+
+        function openEditEntryModal(id) {
+            const entry = db.entries.find(e => e.id == id);
+            if(!entry) return;
+
+            let matchesOptions = db.matches.map(m => `<option value="${m.id}" ${m.id == entry.matchId ? 'selected' : ''}>${getMatchDisplayText(m)}</option>`).join('');
+            let usersOptions = db.users.map(u => `<option value="${u.id}" ${u.id == entry.userId ? 'selected' : ''}>${u.name}</option>`).join('');
+
+            const selectedMatch = db.matches.find(m => m.id == entry.matchId);
+            let typeOptions = selectedMatch ? getTypeOptionsHtml(selectedMatch, entry.typeSelect) : `<option value="${entry.typeSelect}">${entry.typeSelect}</option>`;
+
+            const html = `
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>Match</label>
+                    <select id="modalMatchSelect" onchange="updateModalTypeOptions()">${matchesOptions}</select>
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>User</label>
+                    <select id="modalUserSelect">${usersOptions}</select>
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>Type Selection</label>
+                    <select id="modalTypeSelect" onchange="autoFillModalOdds()">${typeOptions}</select>
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>Odds</label>
+                    <input type="text" id="modalOdds" value="${entry.odds}">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>Amount</label>
+                    <input type="number" id="modalAmount" value="${entry.amount}">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitEditEntry(${entry.id})">Save Changes</button>
+                </div>
+            `;
+            openModal('<i class="fa-solid fa-pen-to-square"></i> Edit Slip', html);
+        }
+
+        function updateModalTypeOptions() {
+            const matchId = document.getElementById('modalMatchSelect').value;
+            const typeSel = document.getElementById('modalTypeSelect');
+            if(!matchId || !typeSel) return;
+
+            const m = db.matches.find(item => item.id == matchId);
+            if(m) {
+                typeSel.innerHTML = getTypeOptionsHtml(m);
+                autoFillModalOdds();
+            }
+        }
+
+        function autoFillModalOdds() {
+            const matchId = document.getElementById('modalMatchSelect').value;
+            const typeVal = document.getElementById('modalTypeSelect').value;
+            const oddsInput = document.getElementById('modalOdds');
+
+            if(!matchId || !typeVal || !oddsInput) return;
+
+            const m = db.matches.find(item => item.id == matchId);
+            if(m) {
+                if(typeVal.includes('⬆') || typeVal.includes('⬇') || typeVal.includes('Goal-Over') || typeVal.includes('Goal-Under') || typeVal.includes('(G+)') || typeVal.includes('(G-)')) {
+                    oddsInput.value = m.goalOdds;
+                } else {
+                    oddsInput.value = m.bodyOdds;
+                }
+            }
+        }
+
+        function submitEditEntry(id) {
+            const entry = db.entries.find(e => e.id == id);
+            if(entry) {
+                entry.matchId = document.getElementById('modalMatchSelect').value;
+                entry.userId = document.getElementById('modalUserSelect').value;
+                entry.typeSelect = document.getElementById('modalTypeSelect').value;
+                entry.odds = document.getElementById('modalOdds').value.trim();
+                entry.amount = parseFloat(document.getElementById('modalAmount').value) || 0;
+                entry.isError = false;
+                
+                const m = db.matches.find(item => item.id == entry.matchId);
+                if(m) {
+                    const { home, away } = getMatchTeams(m);
+                    entry.homeAtEntry = home;
+                    entry.awayAtEntry = away;
+                    entry.favoredAtEntry = m.favored;
+                }
+
+                saveData();
+                renderEntries();
+                renderWinLoseTable();
+                closeModal();
+            }
+        }
+
+        function deleteEntry(id) {
+            if(confirm("Are you sure to delete this entry?")) {
+                db.entries = db.entries.filter(e => e.id != id);
+                saveData();
+                renderEntries();
+                renderWinLoseTable();
+            }
+        }
+
+        function onUserFilterChange() {
+            const selectedUserId = document.getElementById('entryTableUserFilter').value;
+            const userSelect = document.getElementById('entryUserSelect');
+            
+            if (selectedUserId && selectedUserId !== 'ALL') {
+                userSelect.value = selectedUserId;
+            } else {
+                userSelect.value = '';
+            }
+            renderEntries();
+        }
+
+        function formatTypeDisplay(typeStr, isError) {
+            if (!typeStr) return '';
+            
+            let formatted = typeStr.replace(/\s*\([bB][\+\-]\)/g, '');
+
+            formatted = formatted.replace(/\s*(\(G\+\)|Goal-Over|⬆)/g, ' <i class="fa-solid fa-arrow-up text-win"></i>');
+
+            formatted = formatted.replace(/\s*(\(G\-\)|Goal-Under|⬇)/g, ' <i class="fa-solid fa-arrow-down text-loss"></i>');
+
+            if (isError) {
+                return `<span class="text-error">${formatted.trim()}</span>`;
+            }
+
+            return formatted.trim();
+        }
+
+        function renderEntries() {
+            const tbody = document.querySelector('#entryTable tbody');
+            const selectedUserId = document.getElementById('entryTableUserFilter').value;
+            tbody.innerHTML = '';
+
+            let filteredEntries = (selectedUserId && selectedUserId !== 'ALL') 
+                ? db.entries.filter(e => e.userId == selectedUserId) 
+                : db.entries;
+
+            filteredEntries.forEach((e, index) => {
+                const u = db.users.find(user => user.id == e.userId);
+
+                let displayType = formatTypeDisplay(e.typeSelect, e.isError);
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${u ? u.name : '-'}</td>
+                        <td>${displayType}</td>
+                        <td class="odds-cell">${e.odds}</td>
+                        <td>${e.amount.toLocaleString()}</td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="dots-btn" onclick="toggleDropdown(event, 'entry-drop-${e.id}')"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                <div id="entry-drop-${e.id}" class="dropdown-content">
+                                    <button class="edit-btn" onclick="openEditEntryModal(${e.id})"><i class="fa-solid fa-pen"></i> Edit</button>
+                                    <button class="delete-btn" onclick="deleteEntry(${e.id})"><i class="fa-solid fa-trash"></i> Delete</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ================= LEDGER LOGIC =================
+        function renderLedger() {
+            const container = document.getElementById('ledgerContainer');
+            container.innerHTML = '';
+
+            db.matches.forEach(m => {
+                const { home, away } = getMatchTeams(m);
+                let homeTotal = 0;
+                let awayTotal = 0;
+                let overTotal = 0;
+                let underTotal = 0;
+
+                const matchEntries = db.entries.filter(e => e.matchId == m.id);
+
+                matchEntries.forEach(e => {
+                    const type = e.typeSelect;
+                    
+                    if (type.includes('⬆') || type.includes('Goal-Over') || type.includes('(G+)')) {
+                        overTotal += e.amount;
+                    } else if (type.includes('⬇') || type.includes('Goal-Under') || type.includes('(G-)')) {
+                        underTotal += e.amount;
+                    } 
+                    else if (type.includes(home)) {
+                        homeTotal += e.amount;
+                    } else if (type.includes(away)) {
+                        awayTotal += e.amount;
+                    }
+                });
+
+                const matchTitle = getMatchDisplayText(m);
+
+                container.innerHTML += `
+                    <div style="margin-bottom:14px;">
+                        <h4 style="margin-bottom:6px; color:var(--primary); font-size:13px;">${matchTitle}</h4>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:25%;">${home}</th>
+                                        <th style="width:25%;">${away}</th>
+                                        <th style="width:25%;">Goal-Over <i class="fa-solid fa-arrow-up text-win"></i></th>
+                                        <th style="width:25%;">Goal-Under <i class="fa-solid fa-arrow-down text-loss"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>${homeTotal.toLocaleString()}</strong></td>
+                                        <td><strong>${awayTotal.toLocaleString()}</strong></td>
+                                        <td><strong>${overTotal.toLocaleString()}</strong></td>
+                                        <td><strong>${underTotal.toLocaleString()}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ================= WIN/LOSE ENGINE =================
+        function parseOdds(oddStr) {
+            if(!oddStr || oddStr === '-') return { h: 0, sign: '=', val: 0 };
+            let str = oddStr.trim();
+            
+            if (str.includes('=')) {
+                let parts = str.split('=');
+                let h = parseFloat(parts[0]) || 0;
+                let val = parseFloat(parts[1]) || 0;
+                return { h, sign: '=', val };
+            }
+
+            let sign = str.includes('+') ? '+' : '-';
+            let parts = str.split(/[\+\-]/);
+            let h = parseFloat(parts[0]) || 0;
+            let val = parseFloat(parts[1]) || 0;
+
+            return { h, sign, val };
+        }
+
+        function calculateBetResult(entry, match) {
+            if (!match) return { winAmt: 0, lossAmt: 0, displayHomeScore: 0, displayAwayScore: 0 };
+
+            const scoreStr = (match.score || "0-0").replace(':', '-');
+            const [matchHomeScore, matchAwayScore] = scoreStr.split('-').map(x => parseFloat(x) || 0);
+            
+            const { home: currentMatchFavored, away: currentMatchUnderdog } = getMatchTeams(match);
+
+            let entryHomeScore = matchHomeScore;
+            let entryAwayScore = matchAwayScore;
+
+            const entryFavored = entry.favoredAtEntry || entry.homeAtEntry;
+            if (entryFavored && currentMatchFavored !== entryFavored) {
+                entryHomeScore = matchAwayScore;
+                entryAwayScore = matchHomeScore;
+            }
+
+            const totalGoals = entryHomeScore + entryAwayScore;
+            const type = entry.typeSelect;
+            
+            const isOver = type.includes('⬆') || type.includes('Goal-Over') || type.includes('(G+)');
+            const isUnder = type.includes('⬇') || type.includes('Goal-Under') || type.includes('(G-)');
+            
+            const isHomeBet = !isOver && !isUnder && (type.includes(entry.homeAtEntry || currentMatchFavored) || type.includes('(B+)'));
+            const isAwayBet = !isOver && !isUnder && (type.includes(entry.awayAtEntry || currentMatchUnderdog) || type.includes('(B-)'));
+            const isBody = !isOver && !isUnder;
+
+            let winAmt = 0, lossAmt = 0;
+            const amt = entry.amount;
+            const { h, sign, val } = parseOdds(entry.odds);
+
+            if (isBody) {
+                const goalDiff = entryHomeScore - entryAwayScore;
+
+                if (goalDiff > h) {
+                    if (isHomeBet) winAmt = amt;
+                    else lossAmt = amt;
+                } else if (goalDiff < h) {
+                    if (isHomeBet) lossAmt = amt;
+                    else winAmt = amt;
+                } else if (goalDiff === h) {
+                    if (sign === '=') {
+                        winAmt = 0;
+                        lossAmt = 0;
+                    } else if (sign === '-') {
+                        if (isHomeBet) lossAmt = amt * (val / 100);
+                        else winAmt = amt * (val / 100);
+                    } else if (sign === '+') {
+                        if (isHomeBet) winAmt = amt * (val / 100);
+                        else lossAmt = amt * (val / 100);
+                    }
+                }
+            } else if (isOver || isUnder) {
+                if (totalGoals > h) {
+                    if (isOver) winAmt = amt;
+                    else lossAmt = amt;
+                } else if (totalGoals < h) {
+                    if (isOver) lossAmt = amt;
+                    else winAmt = amt;
+                } else if (totalGoals === h) {
+                    if (sign === '=') {
+                        winAmt = 0;
+                        lossAmt = 0;
+                    } else if (sign === '-') {
+                        if (isOver) lossAmt = amt * (val / 100);
+                        else winAmt = amt * (val / 100);
+                    } else if (sign === '+') {
+                        if (isOver) winAmt = amt * (val / 100);
+                        else lossAmt = amt * (val / 100);
+                    }
+                }
+            }
+
+            return { winAmt, lossAmt, displayHomeScore: entryHomeScore, displayAwayScore: entryAwayScore };
+        }
+
+        function updateWinLoseDropdown() {
+            const filterUserSelect = document.getElementById('winLoseUserFilter');
+            const currentSelected = filterUserSelect.value || 'ALL';
+            filterUserSelect.innerHTML = '<option value="ALL">All Bettors</option>';
+            db.users.forEach(u => filterUserSelect.innerHTML += `<option value="${u.id}">${u.name}</option>`);
+            filterUserSelect.value = currentSelected;
+        }
+
+        function renderWinLoseTable() {
+            const filterUserSelect = document.getElementById('winLoseUserFilter');
+            const selectedUserId = filterUserSelect ? filterUserSelect.value : 'ALL';
+
+            const headerCell = document.getElementById('winLoseUserHeaderCell');
+            const yesterdayStr = getYesterdayDateFormatted();
+
+            if (selectedUserId === 'ALL') {
+                headerCell.innerHTML = `${yesterdayStr} ALL Body Commission 0%`;
+            } else {
+                const u = db.users.find(user => user.id == selectedUserId);
+                if (u) {
+                    headerCell.innerHTML = `${yesterdayStr} ${u.name} Body Commission ${u.loseP}%`;
+                } else {
+                    headerCell.innerHTML = `${yesterdayStr} ALL Commission 0%`;
+                }
+            }
+
+            const tbody = document.getElementById('winLoseTbody');
+            const tfoot = document.getElementById('winLoseTfoot');
+            tbody.innerHTML = '';
+            tfoot.innerHTML = '';
+
+            let filteredEntries = selectedUserId !== 'ALL' ? db.entries.filter(e => e.userId == selectedUserId) : db.entries;
+
+            let totalAmt = 0, totalWin = 0, totalLoss = 0;
+
+            filteredEntries.forEach((e, index) => {
+                const u = db.users.find(user => user.id == e.userId);
+                const m = db.matches.find(match => match.id == e.matchId);
+                if(!u) return;
+                
+                const { winAmt, lossAmt } = calculateBetResult(e, m);
+
+                totalAmt += e.amount;
+                totalWin += winAmt;
+                totalLoss += lossAmt;
+
+                const displayType = formatTypeDisplay(e.typeSelect, e.isError);
+
+                let winLosePercentStr = '0';
+                let percentClass = '';
+
+                if (winAmt > 0 && e.amount > 0) {
+                    let pct = Math.round((winAmt / e.amount) * 100);
+                    winLosePercentStr = `+${pct}`;
+                    percentClass = 'text-win';
+                } else if (lossAmt > 0 && e.amount > 0) {
+                    let pct = Math.round((lossAmt / e.amount) * 100);
+                    winLosePercentStr = `-${pct}`;
+                    percentClass = 'text-loss';
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong style="color:var(--primary);">${displayType}</strong></td>
+                        <td>${e.amount.toLocaleString()}</td>
+                        <td class="${percentClass}">${winLosePercentStr}</td>
+                        <td class="text-win">${winAmt.toLocaleString()}</td>
+                        <td class="text-loss">${lossAmt.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            let commWinP = 0, commLossP = 0;
+            if(selectedUserId !== 'ALL') {
+                const u = db.users.find(user => user.id == selectedUserId);
+                if(u) { commWinP = u.winP; commLossP = u.loseP; }
+            }
+
+            const winCommAmt = totalWin * (commWinP / 100);
+            const netWin = totalWin - winCommAmt;
+
+            const lossCommAmt = totalLoss * (commLossP / 100);
+            const netLoss = totalLoss - lossCommAmt;
+
+            const netTotal = netWin - netLoss;
+
+            tfoot.innerHTML = `
+                <tr class="summary-row">
+                    <td colspan="2" style="text-align:right;">TOTAL:</td>
+                    <td>${totalAmt.toLocaleString()}</td>
+                    <td>-</td>
+                    <td class="text-win">${totalWin.toLocaleString()}</td>
+                    <td class="text-loss">${totalLoss.toLocaleString()}</td>
+                </tr>
+                <tr class="summary-row">
+                    <td colspan="2" style="text-align:right;">COMMISSION WIN(${commWinP}%) / LOSE(${commLossP}%):</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="text-win">${netWin.toLocaleString()}</td>
+                    <td class="text-loss">${netLoss.toLocaleString()}</td>
+                </tr>
+                <tr class="summary-row" style="font-size:1.1em; background:var(--header-bg);">
+                    <td colspan="2" style="text-align:right;">ALL TOTAL:</td>
+                    <td colspan="4" style="color: ${netTotal >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight:bold; text-align:center;">${netTotal.toLocaleString()}</td>
+                </tr>
+            `;
+        }
+
+        async function exportWinLoseToPNG() {
+            const tbody = document.getElementById('winLoseTbody');
+            const allRows = Array.from(tbody.querySelectorAll('tr'));
+            
+            if (allRows.length === 0) {
+                alert("Export ထုတ်ရန် ဒေတာမရှိပါ။");
+                return;
+            }
+
+            const selectedUserId = document.getElementById('winLoseUserFilter').value;
+            const yesterdayStr = getYesterdayDateFormatted();
+            
+            let userName = "ALL";
+            if (selectedUserId !== 'ALL') {
+                const u = db.users.find(user => user.id == selectedUserId);
+                if (u) userName = u.name;
+            }
+
+            const chunkSize = 30;
+            const totalPages = Math.ceil(allRows.length / chunkSize);
+
+            for (let i = 0; i < totalPages; i++) {
+                const start = i * chunkSize;
+                const end = start + chunkSize;
+                const chunkRows = allRows.slice(start, end);
+
+                const tempDiv = document.createElement('div');
+                tempDiv.style.position = 'absolute';
+                tempDiv.style.top = '-9999px';
+                tempDiv.style.left = '-9999px';
+                tempDiv.style.width = document.getElementById('winLoseExportArea').offsetWidth + 'px';
+                tempDiv.style.padding = '6px';
+                tempDiv.style.background = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+                
+                const tableClone = document.createElement('table');
+                tableClone.id = 'winLoseTable';
+                tableClone.style.width = '100%';
+                tableClone.style.borderCollapse = 'collapse';
+
+                const theadClone = document.getElementById('winLoseTable').querySelector('thead').cloneNode(true);
+                tableClone.appendChild(theadClone);
+
+                const tbodyClone = document.createElement('tbody');
+                chunkRows.forEach(row => tbodyClone.appendChild(row.cloneNode(true)));
+                tableClone.appendChild(tbodyClone);
+
+                if (i === totalPages - 1) {
+                    const tfootClone = document.getElementById('winLoseTfoot').cloneNode(true);
+                    tableClone.appendChild(tfootClone);
+                }
+
+                tempDiv.appendChild(tempDiv.appendChild(tableClone));
+                document.body.appendChild(tempDiv);
+
+                const canvas = await html2canvas(tempDiv, {
+                    scale: 2,
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--card-bg').trim()
+                });
+
+                document.body.removeChild(tempDiv);
+
+                let fileName = `${yesterdayStr} ${userName}`;
+                if (totalPages > 1) {
+                    fileName += `_Part_${i + 1}`;
+                }
+
+                const link = document.createElement('a');
+                link.download = `${fileName}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+
+        function restartData() {
+            if (confirm("Clear all Matches and Bets? (User list will be kept)")) {
+                db.matches = [];
+                db.entries = [];
+                saveData();
+                renderMatches();
+                renderEntries();
+                renderLedger();
+                renderWinLoseTable();
+                updateTeamDatalist();
+                alert("Data cleared successfully.");
+            }
+        }
+
+        window.onload = function() {
+            loadData();
+            updateFavoredOptions();
+            renderMatches();
+            renderNames();
+            updateEntryDropdowns();
+            updateEntryPasteDropdown();
+            updateTeamDatalist();
+            renderEntries();
+            updateWinLoseDropdown();
+            renderWinLoseTable();
+        };
+    </script>
+</body>
+</html>
